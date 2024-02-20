@@ -61,4 +61,18 @@ class Play : GTP
         string output = GTPProcess.StandardOutput.ReadLine();
         return output;
     }
+
+    /// <summary>
+    /// Undo
+    /// </summary>
+    /// <exception cref="Exception"></exception>
+    public void Undo()
+    {
+        if (GTPProcess == null)
+        {
+            throw new Exception("GTP Process is not Started");
+        }
+
+        GTPProcess.StandardInput.WriteLine("undo");
+    }
 }
