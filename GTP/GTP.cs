@@ -2,12 +2,9 @@
 
 namespace GTP;
 
-/// <summary>
-/// GTPの全体的な制御
-/// </summary>
 public class GTP
 {
-    protected Process? GTPProcess;
+    public Process? GTPProcess;
 
     /// <summary>
     /// Start GTP Process
@@ -16,24 +13,16 @@ public class GTP
     /// <param name="Param">Cmd param</param>
     public void Run(string GTPPath, string? Param)
     {
-        if (GTPProcess == null)
+        if (Param == null)
         {
-            ProcessStartInfo psInfo = new()
-            {
-                FileName = GTPPath,
-                Arguments = Param,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardInput = true
-            };
-
-            GTPProcess = Process.Start(psInfo);
+            GTPProcess = Process.Start(GTPPath);
+        }
+        else
+        {
+            GTPProcess = Process.Start(GTPPath, Param);
         }
     }
-
-    /// <summary>
-    /// GTPの終了
-    /// </summary>
+    
     public void Close()
     {
         GTPProcess?.Close();
