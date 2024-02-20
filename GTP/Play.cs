@@ -75,4 +75,20 @@ class Play : GTP
 
         GTPProcess.StandardInput.WriteLine("undo");
     }
+
+    /// <summary>
+    /// Get Score
+    /// </summary>
+    /// <returns>Score (color+float)</returns>
+    /// <exception cref="Exception"></exception>
+    public string GetScore()
+    {
+        if (GTPProcess == null)
+        {
+            throw new Exception("GTP Process is not Started");
+        }
+
+        GTPProcess.StandardInput.WriteLine("final_score");
+        return GTPProcess.StandardOutput.ReadLine();
+    }
 }
