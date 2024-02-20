@@ -38,7 +38,7 @@ class Play : GTP
         {
             throw new Exception("GTP Process is not started!!");
         }
-        GTPProcess.StandardInput.WriteLine("genmove" + color);
+        GTPProcess.StandardInput.WriteLine("genmove " + color);
         string output = GTPProcess.StandardOutput.ReadLine();
         return output;
     }
