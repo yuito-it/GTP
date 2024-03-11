@@ -5,9 +5,10 @@ namespace GTP;
 /// <summary>
 /// GTPの全体的な制御
 /// </summary>
-public class GTP
+public class GTP2
 {
-    protected Process? GTPProcess;
+    public Play play;
+    public Process? GTPProcess;
 
     /// <summary>
     /// Start GTP Process
@@ -29,6 +30,8 @@ public class GTP
 
             GTPProcess = Process.Start(psInfo);
         }
+
+        play = new Play(GTPProcess);
     }
 
     /// <summary>

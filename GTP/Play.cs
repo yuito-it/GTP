@@ -1,28 +1,58 @@
-﻿namespace GTP;
+﻿using System.Diagnostics;
 
-class Play : GTP
+namespace GTP;
+
+public class Play
 {
+    private Process gtpProcess;
+
+    /// <summary>
+    /// gtpProcessを引数にとり、パイプできるようにする
+    /// </summary>
+    public Play(Process process)
+    {
+        gtpProcess = process;
+    }
+
     /// <summary>
     /// Start new Game.
     /// If you are white, pls run GenMove()
     /// </summary>
     /// <param name="settings"></param>
     /// <exception cref="Exception"></exception>
-    public void Start(PlaySetting settings)
+    public string Start(PlaySetting settings)
     {
-        if (GTPProcess == null)
+        if (gtpProcess == null)
         {
             throw new Exception("GTP Process is not started!!");
         }
-        GTPProcess.StandardInput.WriteLine("komi " + settings.komi);
-        GTPProcess.StandardInput.WriteLine("boardsize " + settings.boardSize);
+        gtpProcess.StandardInput.WriteLine("komi " + settings.komi);
+        string output = gtpProcess.StandardOutput.ReadLine();
+        while (!(output[0] == '='))
+        {
+            output = gtpProcess.StandardOutput.ReadLine();
+        }
         if (!(settings.handicap == null || settings.handicap >= 0 || settings.handicap <= 9) && !(settings.boardSize == 9))
         {
             throw new Exception("handicap has some wrong");
         }
         else
         {
-            GTPProcess.StandardInput.WriteLine("fixed_handicap " + settings.handicap);
+            gtpProcess.StandardInput.WriteLine("fixed_handicap " + settings.handicap);
+            output = gtpProcess.StandardOutput.ReadLine();
+            while (output == null || output.Length == 0)
+            {
+                output = gtpProcess.StandardOutput.ReadLine();
+            }
+            while (!(output[0] == '='))
+            {
+                output = gtpProcess.StandardOutput.ReadLine();
+                while (output == null || output.Length == 0)
+                {
+                    output = gtpProcess.StandardOutput.ReadLine();
+                }
+            }
+            return output;
         }
     }
 
@@ -34,12 +64,16 @@ class Play : GTP
     /// <exception cref="Exception"></exception>
     public string GenMove(string color)
     {
-        if (GTPProcess == null)
+        if (gtpProcess == null)
         {
             throw new Exception("GTP Process is not started!!");
         }
-        GTPProcess.StandardInput.WriteLine("genmove " + color);
-        string output = GTPProcess.StandardOutput.ReadLine();
+        gtpProcess.StandardInput.WriteLine("genmove " + color);
+        string output = gtpProcess.StandardOutput.ReadLine();
+        while (!(output[0] == '='))
+        {
+            output = gtpProcess.StandardOutput.ReadLine();
+        }
         return output;
     }
 
@@ -52,13 +86,25 @@ class Play : GTP
     /// <exception cref="Exception"></exception>
     public string Put(string color, string position)
     {
-        if (GTPProcess == null)
+        if (gtpProcess == null)
         {
             throw new Exception("GTP Process is not Started");
         }
 
-        GTPProcess.StandardInput.WriteLine("play " + color + " " + position);
-        string output = GTPProcess.StandardOutput.ReadLine();
+        gtpProcess.StandardInput.WriteLine("play " + color + " " + position);
+        string output = gtpProcess.StandardOutput.ReadLine();
+        while (output == null || output.Length == 0)
+        {
+            output = gtpProcess.StandardOutput.ReadLine();
+        }
+        while (!(output[0] == '='))
+        {
+            output = gtpProcess.StandardOutput.ReadLine();
+            while (output == null || output.Length == 0)
+            {
+                output = gtpProcess.StandardOutput.ReadLine();
+            }
+        }
         return output;
     }
 
@@ -68,12 +114,12 @@ class Play : GTP
     /// <exception cref="Exception"></exception>
     public void Undo()
     {
-        if (GTPProcess == null)
+        if (gtpProcess == null)
         {
             throw new Exception("GTP Process is not Started");
         }
 
-        GTPProcess.StandardInput.WriteLine("undo");
+        gtpProcess.StandardInput.WriteLine("undo");
     }
 
     /// <summary>
@@ -83,12 +129,26 @@ class Play : GTP
     /// <exception cref="Exception"></exception>
     public string GetScore()
     {
-        if (GTPProcess == null)
+        if (gtpProcess == null)
         {
             throw new Exception("GTP Process is not Started");
         }
 
-        GTPProcess.StandardInput.WriteLine("final_score");
-        return GTPProcess.StandardOutput.ReadLine();
+        gtpProcess.StandardInput.WriteLine("final_score");
+
+        string output = gtpProcess.StandardOutput.ReadLine();
+        while (output == null || output.Length == 0)
+        {
+            output = gtpProcess.StandardOutput.ReadLine();
+        }
+        while (!(output[0] == '='))
+        {
+            output = gtpProcess.StandardOutput.ReadLine();
+            while (output == null || output.Length == 0)
+            {
+                output = gtpProcess.StandardOutput.ReadLine();
+            }
+        }
+        return output;
     }
 }
