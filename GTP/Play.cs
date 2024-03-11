@@ -32,7 +32,7 @@ public class Play
         {
             output = gtpProcess.StandardOutput.ReadLine();
         }
-        if (!(settings.handicap == null || settings.handicap >= 0 || settings.handicap <= 9) && !(settings.boardSize == 9))
+        if (!(settings.handicap == null || settings.handicap >= 0 || settings.handicap <= 9))
         {
             throw new Exception("handicap has some wrong");
         }
