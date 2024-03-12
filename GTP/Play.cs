@@ -11,7 +11,7 @@ public class Play
     /// </summary>
     public Play(Process process)
     {
-        gtpProcess = process;
+        gtpProcess = process ?? throw new ArgumentNullException(nameof(process));
     }
 
     /// <summary>
@@ -22,38 +22,15 @@ public class Play
     /// <exception cref="Exception"></exception>
     public string Start(PlaySetting settings)
     {
-        if (gtpProcess == null)
-        {
-            throw new Exception("GTP Process is not started!!");
-        }
-        gtpProcess.StandardInput.WriteLine("komi " + settings.komi);
-        string output = gtpProcess.StandardOutput.ReadLine();
-        while (!(output[0] == '='))
-        {
-            output = gtpProcess.StandardOutput.ReadLine();
-        }
-        if (!(settings.handicap == null || settings.handicap >= 0 || settings.handicap <= 9))
-        {
-            throw new Exception("handicap has some wrong");
-        }
-        else
-        {
-            gtpProcess.StandardInput.WriteLine("fixed_handicap " + settings.handicap);
-            output = gtpProcess.StandardOutput.ReadLine();
-            while (output == null || output.Length == 0)
-            {
-                output = gtpProcess.StandardOutput.ReadLine();
-            }
-            while (!(output[0] == '='))
-            {
-                output = gtpProcess.StandardOutput.ReadLine();
-                while (output == null || output.Length == 0)
-                {
-                    output = gtpProcess.StandardOutput.ReadLine();
-                }
-            }
-            return output;
-        }
+        ValidateSettings(settings);
+
+        SendCommand($"komi {settings.komi}");
+        ReceiveResponse();
+
+        SendCommand($"fixed_handicap {settings.handicap}");
+        string output = ReceiveResponse();
+
+        return output;
     }
 
     /// <summary>
@@ -64,16 +41,9 @@ public class Play
     /// <exception cref="Exception"></exception>
     public string GenMove(string color)
     {
-        if (gtpProcess == null)
-        {
-            throw new Exception("GTP Process is not started!!");
-        }
-        gtpProcess.StandardInput.WriteLine("genmove " + color);
-        string output = gtpProcess.StandardOutput.ReadLine();
-        while (!(output[0] == '='))
-        {
-            output = gtpProcess.StandardOutput.ReadLine();
-        }
+        SendCommand($"genmove {color}");
+        string output = ReceiveResponse();
+
         return output;
     }
 
@@ -86,25 +56,8 @@ public class Play
     /// <exception cref="Exception"></exception>
     public string Put(string color, string position)
     {
-        if (gtpProcess == null)
-        {
-            throw new Exception("GTP Process is not Started");
-        }
-
-        gtpProcess.StandardInput.WriteLine("play " + color + " " + position);
-        string output = gtpProcess.StandardOutput.ReadLine();
-        while (output == null || output.Length == 0)
-        {
-            output = gtpProcess.StandardOutput.ReadLine();
-        }
-        while (!(output[0] == '='))
-        {
-            output = gtpProcess.StandardOutput.ReadLine();
-            while (output == null || output.Length == 0)
-            {
-                output = gtpProcess.StandardOutput.ReadLine();
-            }
-        }
+        SendCommand($"play {color} {position}");
+        string output = ReceiveResponse();
         return output;
     }
 
@@ -114,12 +67,8 @@ public class Play
     /// <exception cref="Exception"></exception>
     public void Undo()
     {
-        if (gtpProcess == null)
-        {
-            throw new Exception("GTP Process is not Started");
-        }
-
-        gtpProcess.StandardInput.WriteLine("undo");
+        SendCommand("undo");
+        ReceiveResponse();
     }
 
     /// <summary>
@@ -129,26 +78,54 @@ public class Play
     /// <exception cref="Exception"></exception>
     public string GetScore()
     {
-        if (gtpProcess == null)
-        {
-            throw new Exception("GTP Process is not Started");
-        }
+        SendCommand("final_score");
+        string output = ReceiveResponse();
 
-        gtpProcess.StandardInput.WriteLine("final_score");
-
-        string output = gtpProcess.StandardOutput.ReadLine();
-        while (output == null || output.Length == 0)
-        {
-            output = gtpProcess.StandardOutput.ReadLine();
-        }
-        while (!(output[0] == '='))
-        {
-            output = gtpProcess.StandardOutput.ReadLine();
-            while (output == null || output.Length == 0)
-            {
-                output = gtpProcess.StandardOutput.ReadLine();
-            }
-        }
         return output;
+    }
+
+    /// <summary>
+    /// コマンド送信
+    /// </summary>
+    /// <param name="command"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private void SendCommand(string command)
+    {
+        if (gtpProcess == null || gtpProcess.HasExited)
+        {
+            throw new InvalidOperationException("GTP Process is not running.");
+        }
+
+        gtpProcess.StandardInput.WriteLine(command);
+    }
+
+    /// <summary>
+    /// output取得
+    /// </summary>
+    /// <returns></returns>
+    private string ReceiveResponse()
+    {
+        string output;
+        do
+        {
+            output = gtpProcess?.StandardOutput.ReadLine();
+        } while (string.IsNullOrEmpty(output) || output[0] != '=');
+
+        return output;
+    }
+
+    /// <summary>
+    /// Playsettingのnullチェック
+    /// </summary>
+    /// <param name="setting"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    private void ValidateSettings(PlaySetting setting)
+    {
+        if (setting == null) throw new ArgumentNullException(nameof(setting));
+        if (setting.handicap.HasValue && (setting.handicap < 0 || setting.handicap > 9))
+        {
+            throw new ArgumentOutOfRangeException(nameof(setting.handicap), "Handicap must be between 0 and 9.");
+        }
     }
 }
